@@ -137,19 +137,19 @@ def get_topk_accuracy(model, tokenizer, paragraphs, cfg, k, batch_size=16):
 def find_best_threshold(model, tokenizer, normal_paras, anomaly_paras, cfg):
     print("\nSearching for best threshold (P > 0.90 and R > 0.90) ->")
 
-    n_eval       = min(1000, len(normal_paras), len(anomaly_paras))
-    eval_normal  = random.sample(normal_paras, n_eval)
+    n_eval = min(1000, len(normal_paras), len(anomaly_paras))
+    eval_normal = random.sample(normal_paras, n_eval)
     eval_anomaly = random.sample(anomaly_paras, n_eval)
-    eval_paras   = eval_normal + eval_anomaly
+    eval_paras = eval_normal + eval_anomaly
     true_labels  = [0] * n_eval + [1] * n_eval
 
     best_balanced = {"precision": 0,"recall": 0, "f1": 0, "threshold": 0.5, "k": 9}
     best_precision = {"precision": 0,"recall": 0, "f1": 0, "threshold": 0.5, "k": 9}
     for k in cfg["topk_candidates"]:
-        print(f"    Trying k={k}->")
-        scores     = get_topk_accuracy(model, tokenizer, eval_paras, cfg, k=k)
+        print(f" Trying k={k}->")
+        scores  = get_topk_accuracy(model, tokenizer, eval_paras, cfg, k=k)
         train_acc  = float(np.mean(scores[:n_eval]))
-        low        = max(0.0, train_acc - 0.30)
+        low = max(0.0, train_acc - 0.30)
         thresholds = np.linspace(train_acc, low, cfg["threshold_steps"])
 
         for thresh in thresholds:
@@ -197,9 +197,9 @@ def find_best_threshold(model, tokenizer, normal_paras, anomaly_paras, cfg):
     print(f"Precision target not reachable, using best F1.")
     best_f1 = {"precision": 0, "recall": 0, "f1": 0, "threshold": 0.5, "k": 9, "target_hit": False}
     for k in cfg["topk_candidates"]:
-        scores     = get_topk_accuracy(model, tokenizer, eval_paras, cfg, k=k)
+        scores = get_topk_accuracy(model, tokenizer, eval_paras, cfg, k=k)
         train_acc  = float(np.mean(scores[:n_eval]))
-        low        = max(0.0, train_acc - 0.30)
+        low  = max(0.0, train_acc - 0.30)
         thresholds = np.linspace(train_acc, low, cfg["threshold_steps"])
         for thresh in thresholds:
             preds = [1 if s < thresh else 0 for s in scores]
@@ -210,8 +210,7 @@ def find_best_threshold(model, tokenizer, normal_paras, anomaly_paras, cfg):
                 best_f1 = {
                     "precision": round(p, 4),
                     "recall": round(r, 4),
-                    "f1": round(f, 4),
-                    "threshold" : round(float(thresh), 4),
+                    "f1": round(f, 4), "threshold" : round(float(thresh), 4),
                     "k" : k,
                     "target_hit": False,
                 }
@@ -299,8 +298,8 @@ def main():
         paragraphs = random.sample(paragraphs, cfg["n_train_samples"])
         print(f"Sampled to: {len(paragraphs)}")
     print(f"\nLoading test: {cfg['test_csv']}")
-    test_df     = pd.read_csv(cfg["test_csv"])
-    normal_val  = test_df[test_df[cfg["label_col"]] == 0][cfg["paragraph_col"]].dropna().astype(str).tolist()
+    test_df  = pd.read_csv(cfg["test_csv"])
+    normal_val = test_df[test_df[cfg["label_col"]] == 0][cfg["paragraph_col"]].dropna().astype(str).tolist()
     anomaly_val = test_df[test_df[cfg["label_col"]] == 1][cfg["paragraph_col"]].dropna().astype(str).tolist()
     print(f"Val normal: {len(normal_val)}  |  Val anomaly: {len(anomaly_val)}")
 
@@ -312,7 +311,7 @@ def main():
     all_thresholds = []
 
     for fold_idx, (train_idx, _) in enumerate(kf.split(paragraphs)):
-        fold_model      = RobertaForMaskedLM.from_pretrained(cfg["base_model"])
+        fold_model  = RobertaForMaskedLM.from_pretrained(cfg["base_model"])
         fold_paragraphs = [paragraphs[i] for i in train_idx][:cfg["n_train_per_fold"]]
 
         best_loss, loss_history, threshold_result = train_one_fold(
